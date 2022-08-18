@@ -1,0 +1,23 @@
+<Configuration>
+<VGpu>Default</VGpu>
+<Networking>Default</Networking>
+<MappedFolders>
+   <MappedFolder>
+     <HostFolder>.\Utils\</HostFolder>
+     <ReadOnly>true</ReadOnly>
+   </MappedFolder>
+   <MappedFolder>
+     <HostFolder>.\Files\</HostFolder>
+     <ReadOnly>false</ReadOnly>
+   </MappedFolder>
+</MappedFolders>
+<LogonCommand>
+   <Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\DefaultScripts\setThemes.ps1</Command>
+
+   <!--Feel free to add your own stuff in here, it will auto-run on Log On-->
+   <!--<Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\customScript.ps1</Command>-->
+   <!--just uncomment the line below and REToolkit will be installed after Sandbox boots up-->
+   <!--<Command>powershell.exe -ExecutionPolicy BYpass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\installREToolkit.ps1</Command>-->
+
+</LogonCommand>
+</Configuration>
