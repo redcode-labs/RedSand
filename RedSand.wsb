@@ -12,12 +12,15 @@
    </MappedFolder>
 </MappedFolders>
 <LogonCommand>
-   <Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\DefaultScripts\setThemes.ps1</Command>
-
+   <Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\DefaultScripts\setup.ps1</Command>
+   
    <!--Feel free to add your own stuff in here, it will auto-run on Log On-->
+   <!--NOTE: for me, certain scripts combined caused problems, hence I ditched 'setThemes.ps1' for 'setup.ps1' which also includes changing ExecutionPolicy to Unrestricted-->
+   <!--however, feel free to change the Execution Policy to your liking as well-->
+   
    <!--<Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\customScript.ps1</Command>-->
    <!--just uncomment the line below and REToolkit will be installed after Sandbox boots up-->
-   <!--<Command>powershell.exe -ExecutionPolicy BYpass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\installREToolkit.ps1</Command>-->
+   <!--<Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\installREToolkit.ps1</Command>-->
 
 </LogonCommand>
 </Configuration>
