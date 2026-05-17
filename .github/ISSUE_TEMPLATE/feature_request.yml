@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest a new script, .wsb tweak, or improvement
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: What's the underlying friction or missing capability?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you've tried, or other approaches you weighed.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context

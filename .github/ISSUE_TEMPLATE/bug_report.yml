@@ -1,0 +1,56 @@
+name: Bug report
+description: Something in RedSand isn't behaving as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: Describe the unexpected behavior.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `...`
+        2. Launch `RedSand.wsb`
+        3. ...
+    validations:
+      required: true
+
+  - type: input
+    id: windows-version
+    attributes:
+      label: Windows version
+      placeholder: "e.g. Windows 11 Pro 23H2 (build 22631)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Which component is involved?
+      options:
+        - RedSand.wsb
+        - setup.ps1
+        - installChocoAndScoop.ps1
+        - installREToolkit.ps1
+        - godMode.ps1
+        - customScript.ps1
+        - downloadSysinternalsSuite.ps1
+        - downloadZimmermanTools.ps1
+        - enableSandboxFeature.ps1
+        - Docs / README
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / screenshots
+      description: Paste any error output or attach screenshots. Trim secrets.
+      render: shell

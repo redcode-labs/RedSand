@@ -1,13 +1,18 @@
-New-Item -Path "..\..\..\Toolkits" -Name "Zimmerman" -ItemType "directory"
-Set-Location -Path "..\..\..\Toolkits\Zimmerman"
+#Requires -Version 5.1
+$ErrorActionPreference = 'Stop'
 
-$url = "https://f001.backblazeb2.com/file/EricZimmermanTools/Get-ZimmermanTools.zip"
+# Anchor paths to the script location so this works regardless of caller PWD
+$toolkits = Join-Path $PSScriptRoot '..\..\..\Toolkits'
+$dir = Join-Path $toolkits 'Zimmerman'
+New-Item -ItemType Directory -Path $dir -Force | Out-Null
 
-$dest = ".\Get-ZimmermanTools.zip"
+$zip = Join-Path $dir 'Get-ZimmermanTools.zip'
+$extracted = Join-Path $dir 'Get-ZimmermanTools'
 
-# TIL: Invoke-WebRequest is slower because it has to buffer the file in memory first before writing it to a disk
-Start-BitsTransfer -Source $url -Destination $dest
+# Start-BitsTransfer streams to disk instead of buffering in memory like Invoke-WebRequest
+Start-BitsTransfer -Source 'https://f001.backblazeb2.com/file/EricZimmermanTools/Get-ZimmermanTools.zip' -Destination $zip
 
-Expand-Archive -Path ".\Get-ZimmermanTools.zip" -DestinationPath ".\Get-ZimmermanTools"
+Expand-Archive -Path $zip -DestinationPath $extracted -Force
+Remove-Item $zip -Force
 
-.\Get-ZimmermanTools\Get-ZimmermanTools.ps1
+& (Join-Path $extracted 'Get-ZimmermanTools.ps1')

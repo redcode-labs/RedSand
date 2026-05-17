@@ -1,8 +1,13 @@
-$url = "https://download.sysinternals.com/files/SysinternalsSuite.zip"
+#Requires -Version 5.1
+$ErrorActionPreference = 'Stop'
 
-$dest = "..\..\..\Toolkits\SysinternalsSuite.zip"
+# Anchor paths to the script location so this works regardless of caller PWD
+$toolkits = Join-Path $PSScriptRoot '..\..\..\Toolkits'
+New-Item -ItemType Directory -Path $toolkits -Force | Out-Null
 
-# TIL: Invoke-WebRequest is slower because it has to buffer the file in memory first before writing it to a disk
-Start-BitsTransfer -Source $url -Destination $dest
+$zip = Join-Path $toolkits 'SysinternalsSuite.zip'
+$extracted = Join-Path $toolkits 'SysinternalsSuite'
 
-Expand-Archive -Path "..\..\..\Toolkits\SysinternalsSuite.zip" -DestinationPath "..\..\..\Toolkits\SysinternalsSuite"
+Start-BitsTransfer -Source 'https://download.sysinternals.com/files/SysinternalsSuite.zip' -Destination $zip
+Expand-Archive -Path $zip -DestinationPath $extracted -Force
+Remove-Item $zip -Force

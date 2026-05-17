@@ -1,0 +1,71 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser
+
+      - name: Lint PowerShell scripts
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem -Path . -Recurse -Filter *.ps1
+          $results = $files | ForEach-Object {
+              Invoke-ScriptAnalyzer -Path $_.FullName -Settings ./PSScriptAnalyzerSettings.psd1
+          }
+          if ($results) {
+              $results | Format-Table -AutoSize | Out-String | Write-Host
+              $errors = @($results | Where-Object Severity -eq 'Error')
+              if ($errors.Count -gt 0) {
+                  Write-Host "::error::PSScriptAnalyzer found $($errors.Count) error(s)"
+                  exit 1
+              }
+              Write-Host "PSScriptAnalyzer: $($results.Count) non-error finding(s)"
+          } else {
+              Write-Host "PSScriptAnalyzer: no issues"
+          }
+
+      - name: Parse PowerShell syntax
+        shell: pwsh
+        run: |
+          $hadError = $false
+          Get-ChildItem -Path . -Recurse -Filter *.ps1 | ForEach-Object {
+              $parseErrors = $null
+              [System.Management.Automation.Language.Parser]::ParseFile(
+                  $_.FullName, [ref]$null, [ref]$parseErrors
+              ) | Out-Null
+              if ($parseErrors -and $parseErrors.Count -gt 0) {
+                  Write-Host "::error file=$($_.FullName)::Parse errors:"
+                  $parseErrors | ForEach-Object { Write-Host "  $_" }
+                  $hadError = $true
+              } else {
+                  Write-Host "OK: $($_.FullName)"
+              }
+          }
+          if ($hadError) { exit 1 }
+
+      - name: Validate .wsb XML
+        shell: pwsh
+        run: |
+          $hadError = $false
+          Get-ChildItem -Path . -Recurse -Filter *.wsb | ForEach-Object {
+              try {
+                  [xml](Get-Content $_.FullName -Raw) | Out-Null
+                  Write-Host "OK: $($_.FullName)"
+              } catch {
+                  Write-Host "::error file=$($_.FullName)::XML invalid: $_"
+                  $hadError = $true
+              }
+          }
+          if ($hadError) { exit 1 }

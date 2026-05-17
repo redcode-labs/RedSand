@@ -3,3 +3,6 @@ Utils/Toolkits/*
 
 Files/*
 !Files/.gitkeep
+
+# Work-in-progress profiles + their outputs — not yet released
+.drafts/

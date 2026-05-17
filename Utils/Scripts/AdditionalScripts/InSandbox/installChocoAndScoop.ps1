@@ -1,17 +1,25 @@
-# Scoop
+#Requires -Version 5.1
+$ErrorActionPreference = 'Stop'
+
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
+# Scoop — sandbox runs as admin, so -RunAsAdmin is required or Scoop refuses to install
 try {
-    Invoke-Expression (New-Object System.Net.WebClient).DownloadString('https://get.scoop.sh')
-    # add Scoop to PATH
-    $env:PATH += ";$($HOME)\scoop\shims"
+    Invoke-Expression "& {$(Invoke-RestMethod get.scoop.sh)} -RunAsAdmin"
+    if (-not (Test-Path "$HOME\scoop\shims\scoop.cmd")) {
+        Write-Error "Scoop install completed but shim not found at expected path"
+    }
 } catch {
-    Write-Error "Error occured during installation of Scoop $($_.Exception.Message)"
-    return
+    Write-Error "Error during Scoop install: $($_.Exception.Message)"
 }
+
 # Chocolatey
 try {
     Set-ExecutionPolicy Bypass -Scope Process -Force
-    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+    Invoke-Expression ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+    if (-not (Test-Path "$env:ProgramData\chocolatey\bin\choco.exe")) {
+        Write-Error "Chocolatey install completed but choco.exe not found at expected path"
+    }
 } catch {
-    Write-Error "Error occured during installation of Chocolatey: $($_.Exception.Message)"
+    Write-Error "Error during Chocolatey install: $($_.Exception.Message)"
 }

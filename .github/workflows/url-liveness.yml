@@ -1,0 +1,75 @@
+name: URL liveness
+
+# Catches upstream changes before users do (e.g. an installer URL going 404, or
+# a release asset name pattern shifting like REtoolkit did when it switched from
+# _setup.exe to .7z).
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Mondays 06:00 UTC
+  workflow_dispatch:
+
+jobs:
+  check-urls:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe upstream URLs
+        shell: pwsh
+        run: |
+          $urls = @(
+              'https://get.scoop.sh',
+              'https://chocolatey.org/install.ps1',
+              'https://www.7-zip.org/a/7zr.exe',
+              'https://download.sysinternals.com/files/SysinternalsSuite.zip',
+              'https://f001.backblazeb2.com/file/EricZimmermanTools/Get-ZimmermanTools.zip'
+          )
+
+          function Test-Url {
+              param([string]$Url)
+              try {
+                  $r = Invoke-WebRequest -Uri $Url -Method Head -MaximumRedirection 5 -TimeoutSec 30 -ErrorAction Stop
+                  return @{ ok = $true; status = $r.StatusCode }
+              } catch {
+                  # Some hosts don't allow HEAD — retry with a 1-byte Range GET
+                  try {
+                      $r = Invoke-WebRequest -Uri $Url -Headers @{ Range = 'bytes=0-0' } -MaximumRedirection 5 -TimeoutSec 30 -ErrorAction Stop
+                      return @{ ok = $true; status = $r.StatusCode }
+                  } catch {
+                      return @{ ok = $false; error = $_.Exception.Message }
+                  }
+              }
+          }
+
+          $failures = @()
+          foreach ($u in $urls) {
+              $result = Test-Url -Url $u
+              if ($result.ok) {
+                  Write-Host "OK ($($result.status)): $u"
+              } else {
+                  Write-Host "::error::FAIL: $u -> $($result.error)"
+                  $failures += $u
+              }
+          }
+
+          # Also verify the REtoolkit release still has a *.7z asset — the matcher
+          # in installREToolkit.ps1 depends on it.
+          try {
+              $release = Invoke-RestMethod -Uri 'https://api.github.com/repos/mentebinaria/retoolkit/releases/latest' -TimeoutSec 30
+              $asset = $release.assets | Where-Object { $_.name -like '*.7z' } | Select-Object -First 1
+              if ($asset) {
+                  Write-Host "OK: retoolkit latest = $($release.tag_name), asset = $($asset.name)"
+              } else {
+                  Write-Host "::error::retoolkit release $($release.tag_name) has no *.7z asset — installREToolkit.ps1 will break"
+                  $failures += 'retoolkit asset pattern'
+              }
+          } catch {
+              Write-Host "::error::retoolkit API probe failed: $($_.Exception.Message)"
+              $failures += 'retoolkit API'
+          }
+
+          if ($failures.Count -gt 0) {
+              Write-Host "::error::$($failures.Count) upstream(s) failed liveness check"
+              exit 1
+          }
