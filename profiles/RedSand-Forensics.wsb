@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+<!--
+  Forensics profile - triaging evidence images.
+  Network off (no contamination from updates/telemetry), Input/ mapped read-only
+  (don't accidentally modify evidence), 8 GB RAM for processing, audio/video/
+  printer off (no accidental capture during analysis).
+
+  Output/ is mapped read-write for analyst notes / exports. Remove the Output
+  MappedFolder block below if you want zero writable mappings to the host.
+-->
+<VGpu>Default</VGpu>
+<Networking>Disable</Networking>
+<ProtectedClient>Enable</ProtectedClient>
+<ClipboardRedirection>Disable</ClipboardRedirection>
+<AudioInput>Disable</AudioInput>
+<VideoInput>Disable</VideoInput>
+<PrinterRedirection>Disable</PrinterRedirection>
+<MemoryInMB>8192</MemoryInMB>
+<MappedFolders>
+   <MappedFolder>
+     <HostFolder>..\Utils\</HostFolder>
+     <ReadOnly>true</ReadOnly>
+   </MappedFolder>
+   <MappedFolder>
+     <HostFolder>..\Input\</HostFolder>
+     <ReadOnly>true</ReadOnly>
+   </MappedFolder>
+   <!-- Comment out this MappedFolder block to make the sandbox fully non-persistent. -->
+   <MappedFolder>
+     <HostFolder>..\Output\</HostFolder>
+     <ReadOnly>false</ReadOnly>
+   </MappedFolder>
+</MappedFolders>
+<LogonCommand>
+   <Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\DefaultScripts\setup.ps1</Command>
+
+   <!-- Disable sandbox-local Defender - useful when carving binaries out of evidence images that may trip AV. Host Defender is untouched. -->
+   <!--<Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\disableDefender.ps1</Command>-->
+
+   <!-- Install forensics tooling (HxD, ExifTool, Notepad++). Needs network - flip <Networking> to Default for first boot. -->
+   <!--<Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\installForensicsTools.ps1</Command>-->
+
+   <!--<Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\customScript.ps1</Command>-->
+
+</LogonCommand>
+</Configuration>

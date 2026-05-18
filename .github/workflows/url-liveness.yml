@@ -13,7 +13,7 @@ jobs:
   check-urls:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
       - name: Probe upstream URLs
         shell: pwsh
@@ -23,7 +23,8 @@ jobs:
               'https://chocolatey.org/install.ps1',
               'https://www.7-zip.org/a/7zr.exe',
               'https://download.sysinternals.com/files/SysinternalsSuite.zip',
-              'https://f001.backblazeb2.com/file/EricZimmermanTools/Get-ZimmermanTools.zip'
+              'https://raw.githubusercontent.com/EricZimmerman/Get-ZimmermanTools/master/Get-ZimmermanTools.ps1',
+              'https://tools.ericzimmermanstools.com'
           )
 
           function Test-Url {

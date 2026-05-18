@@ -1,8 +1,16 @@
+.DS_Store
+
 Utils/Toolkits/*
 !Utils/Toolkits/.gitkeep
 
 Files/*
 !Files/.gitkeep
 
-# Work-in-progress profiles + their outputs — not yet released
+Input/*
+!Input/.gitkeep
+
+Output/*
+!Output/.gitkeep
+
+# Work-in-progress profiles — not yet released
 .drafts/

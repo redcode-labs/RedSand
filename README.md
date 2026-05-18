@@ -8,9 +8,17 @@
 
 ## About
 
-RedSand is a pre-made `.wsb` that spins up a Windows Sandbox tailored for security work — just double-click the file. It maps a read-only `Utils/` folder (scripts, toolkits) and a read-write `Files/` folder (your working files) into the VM, then runs a setup script on logon.
+RedSand is a set of pre-made `.wsb` profiles that spin up a Windows Sandbox tailored for security work — just double-click one. Each profile maps a read-only `Utils/` folder (scripts, toolkits) plus the host folders appropriate for its workflow, then runs a setup script on logon.
 
 Modify the `.wsb` and `.ps1` files freely to match your workflow. Contributions of all kinds — new scripts, `.wsb` tweaks, documentation — are welcome.
+
+## Gallery
+
+<p align="center">
+  <img src="media/01-boot.png" alt="Sandbox boot screen with dark theme and RedSand wallpaper" width="60%" />
+</p>
+
+<p align="center"><sub><i>Post-logon boot — dark theme and RedSand wallpaper applied by setup.ps1.</i></sub></p>
 
 ## Quick start
 
@@ -20,47 +28,68 @@ Modify the `.wsb` and `.ps1` files freely to match your workflow. Contributions 
    .\Utils\Scripts\AdditionalScripts\OnHost\enableSandboxFeature.ps1
    ```
    Reboot if prompted.
-2. Double-click `profiles\RedSand.wsb` in File Explorer.
+2. Pick a profile from `profiles/` and double-click it. Start with `profiles\RedSand.wsb` if unsure.
 3. The sandbox boots, `setup.ps1` runs automatically, and you land on a desktop ready to work.
 
-## What you get
+**Tip:** For first-time setup, `Utils\Scripts\AdditionalScripts\OnHost\prepareForRedSand.ps1` orchestrates step 1 (feature check) and pre-stages tools in `Utils/Toolkits/` so the strict profiles have something to work with — interactive picker, or pass `-All` to grab everything.
 
-The default `RedSand.wsb` enables a hardened baseline suitable for analysis work:
+## Profiles
 
-| Setting | Value | Why |
-|---|---|---|
-| `ProtectedClient` | Enable | Stricter RDP security inside the sandbox |
-| `ClipboardRedirection` | Disable | Host clipboard can't leak into / out of the VM |
-| `MemoryInMB` | 4096 | Comfortable for most tooling |
-| `Networking` | Default | Internet on — adjust to taste |
+Pick the profile that matches your workflow. All profiles share the same `setup.ps1` (dark theme, dev mode, wallpaper, ExecutionPolicy) — they differ in sandbox isolation knobs and which host folders are mapped.
 
-On logon, `setup.ps1` also:
+| Setting | `RedSand.wsb` (default) | `RedSand-Analysis.wsb` | `RedSand-Forensics.wsb` |
+|---|---|---|---|
+| **Audience** | General-purpose | RE / static + dynamic binary analysis | Triaging evidence images |
+| `Networking` | Default | **Disable** | **Disable** |
+| `ClipboardRedirection` | Disable | Disable | Disable |
+| `ProtectedClient` | Enable | Enable | Enable |
+| `AudioInput` | Default | **Disable** | **Disable** |
+| `VideoInput` | Default | **Disable** | **Disable** |
+| `PrinterRedirection` | Default | **Disable** | **Disable** |
+| `VGpu` | Default | **Disable** | Default |
+| `MemoryInMB` | 4096 | 4096 | **8192** |
+| `Files/` mapping | read-write | — | — |
+| `Input/` mapping | — | **read-only** | **read-only** |
+| `Output/` mapping | — | **read-write** | **read-write** |
+| `Utils/` mapping | read-only | read-only | read-only |
+
+- **Default** — general-purpose; `Files/` is read-write scratch space.
+- **Analysis** — drop samples into `Input/` *before launch* (it's read-only inside, so the sample can't tamper with the original or delete itself). Analysis artifacts land in `Output/`. The wsb has commented-out auto-run hints for: Defender disable, lightweight tool pack, and REtoolkit — uncomment what you need. Tool installs require network on first boot.
+- **Forensics** — drop evidence images into `Input/` *before launch*. Notes/exports land in `Output/`. Same isolation as Analysis but vGPU stays on for image-viewer responsiveness. Commented hints for Defender disable and a narrow forensics tool pack are in the wsb.
+
+Each profile's `.wsb` has the `Output/` mapping clearly marked — comment that `MappedFolder` block out if you want a sandbox with zero writable host mappings.
+
+**If you pick a network-off profile (Analysis / Forensics), run the on-host downloader scripts first** so the tools you need are pre-staged in `Utils/Toolkits/` before launch — once the sandbox boots there's no way to fetch them.
+
+What `setup.ps1` does on every profile:
 
 - Sets ExecutionPolicy to `Unrestricted` (sandbox-local, throwaway)
 - Enables developer mode (`AllowDevelopmentWithoutDevLicense`)
 - Switches to dark theme
 - Applies the RedSand wallpaper
 
-Loosen the wsb defaults if your workload needs the host clipboard or more RAM.
-
 ## Directory layout
 
 ```
 RedSand/
-├── profiles/
-│   └── RedSand.wsb             # Sandbox config — double-click to launch
-├── Files/                      # Read-write; drop samples / payloads here
-├── Utils/
-│   ├── Toolkits/               # Tools downloaded by OnHost scripts land here
-│   └── Scripts/
-│       ├── DefaultScripts/     # Run automatically on logon
-│       │   └── setup.ps1
-│       └── AdditionalScripts/
-│           ├── OnHost/         # Run these on your host before launching
-│           └── InSandbox/      # Run these inside the sandbox (manual or via wsb)
+├── profiles/                   # Sandbox configs — double-click one to launch
+│   ├── RedSand.wsb             # Default
+│   ├── RedSand-Analysis.wsb    # No network, max isolation, read-only Input/
+│   └── RedSand-Forensics.wsb   # No network, 8 GB, read-only Input/
+├── Files/                      # Read-write scratch (default profile only)
+├── Input/                      # Read-only sample / evidence drop (Analysis + Forensics)
+├── Output/                     # Read-write results dir (Analysis + Forensics)
+└── Utils/
+    ├── Toolkits/               # Tools downloaded by OnHost scripts land here
+    └── Scripts/
+        ├── DefaultScripts/     # Run automatically on logon (every profile)
+        │   └── setup.ps1
+        └── AdditionalScripts/
+            ├── OnHost/         # Run these on your host before launching
+            └── InSandbox/      # Run these inside the sandbox (manual or via wsb)
 ```
 
-`Utils/` is mapped read-only; `Files/` read-write. Anything you download on the host into `Utils/Toolkits/` (via the OnHost scripts) becomes available inside the sandbox at `C:\users\WDAGUtilityAccount\Desktop\Utils\Toolkits\`.
+`Utils/` is always mapped read-only. `Files/` is mapped read-write only by the default profile. `Input/` is mapped read-only by Analysis and Forensics; `Output/` is mapped read-write by the same two. Anything you download on the host into `Utils/Toolkits/` (via the OnHost scripts) becomes available inside the sandbox at `C:\users\WDAGUtilityAccount\Desktop\Utils\Toolkits\`.
 
 ## Scripts reference
 
@@ -68,24 +97,39 @@ RedSand/
 
 | Script | What it does |
 |---|---|
+| `prepareForRedSand.ps1` | One-shot orchestrator. Checks the sandbox feature is enabled, then runs the downloader scripts below (interactive picker, or `-All` / `-Sysinternals` / `-Zimmerman` flags). |
 | `enableSandboxFeature.ps1` | Enables the Windows Sandbox optional feature. Requires admin; may need a reboot. |
 | `downloadSysinternalsSuite.ps1` | Downloads SysinternalsSuite into `Utils/Toolkits/SysinternalsSuite/`. |
 | `downloadZimmermanTools.ps1` | Fetches Eric Zimmerman's forensics tools into `Utils/Toolkits/Zimmerman/`. |
 
-### In-sandbox (run inside the VM, manually or by wiring into `RedSand.wsb`)
+To run any OnHost script, open PowerShell in the repo root:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\Utils\Scripts\AdditionalScripts\OnHost\<script-name>.ps1
+```
+
+`prepareForRedSand.ps1` is the recommended starting point for first-time setup.
+
+### In-sandbox (run inside the VM, manually or by wiring into a profile's `.wsb`)
 
 | Script | What it does |
 |---|---|
-| `installChocoAndScoop.ps1` | Installs both [Scoop](https://scoop.sh) and [Chocolatey](https://chocolatey.org). |
+| `installChocoAndScoop.ps1` | Installs both [Scoop](https://scoop.sh) and [Chocolatey](https://chocolatey.org). Prerequisite for the tool-pack installers below. |
+| `installAnalysisTools.ps1` | Lightweight RE pack via scoop: dnSpy, HxD, PE-bear, Detect It Easy, x64dbg, System Informer (formerly Process Hacker), Wireshark. |
+| `installForensicsTools.ps1` | Narrow forensics pack via scoop: HxD, ExifTool (complements pre-staged Sysinternals + EZ tools). |
 | `installREToolkit.ps1` | Downloads the latest [REtoolkit](https://github.com/mentebinaria/retoolkit) release and runs the silent installer. |
+| `disableDefender.ps1` | Disables Defender **inside the sandbox only** (host untouched). Use when samples would otherwise be quarantined. |
+| `excludeInputFromDefender.ps1` | Softer alternative — keeps Defender running but adds `Input/` to its exclusion list. |
 | `godMode.ps1` | Creates a "God Mode" control-panel folder on the desktop. |
 | `customScript.ps1` | Empty hook — drop whatever you want auto-run here. |
 
-To auto-run any in-sandbox script on logon, uncomment the matching line in `RedSand.wsb`:
+To auto-run any in-sandbox script on logon, uncomment the matching line in your chosen profile's `.wsb`:
 
 ```xml
 <Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\installREToolkit.ps1</Command>
 ```
+
+> NOTE: if you want to use any script that requires network connectivity (`installREToolkit.ps1` OR `installChocoAndScoop.ps1` and dependent on it `installAnalysisTools.ps1`/`installForensicsTools.ps1`) in 'Analysis' or 'Forensics' profile - please toggle `<Networking>Default</Networking>` in respective `.wsb` file.
 
 ## Customization
 
@@ -98,7 +142,9 @@ Common tweaks:
 - **GPU passthrough** — already `Default`; change to `Disable` if you want strict CPU-only execution
 - **Extra logon commands** — add more `<Command>` entries in `<LogonCommand>`
 
-For one-off in-sandbox setup, edit `customScript.ps1` and uncomment its `<Command>` line in the wsb — keeps your customizations out of the always-run `setup.ps1`.
+For one-off in-sandbox setup, edit `customScript.ps1` and uncomment its `<Command>` line in your profile's wsb — keeps your customizations out of the always-run `setup.ps1`.
+
+If you don't want a profile's writable `Output/` mapping persisting state on the host, comment out the `Output/` `MappedFolder` block in that wsb (it's marked with an inline comment).
 
 ## Security notes
 

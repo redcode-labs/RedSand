@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+<!--
+  Analysis profile - maximum host isolation for static/dynamic binary analysis.
+  Network off (sample can't C2 / pull payloads), Input/ mapped read-only (sample
+  can't tamper with the original), GPU / audio / video / printer all off to
+  minimize side channels and attack surface.
+
+  Output/ is mapped read-write so notes / strings dumps / artifacts have somewhere
+  to land. Remove the Output MappedFolder block below if you want zero writable
+  mappings to the host.
+-->
+<VGpu>Disable</VGpu>
+<Networking>Disable</Networking>
+<ProtectedClient>Enable</ProtectedClient>
+<ClipboardRedirection>Disable</ClipboardRedirection>
+<AudioInput>Disable</AudioInput>
+<VideoInput>Disable</VideoInput>
+<PrinterRedirection>Disable</PrinterRedirection>
+<MemoryInMB>4096</MemoryInMB>
+<MappedFolders>
+   <MappedFolder>
+     <HostFolder>..\Utils\</HostFolder>
+     <ReadOnly>true</ReadOnly>
+   </MappedFolder>
+   <MappedFolder>
+     <HostFolder>..\Input\</HostFolder>
+     <ReadOnly>true</ReadOnly>
+   </MappedFolder>
+   <!-- Comment out this MappedFolder block to make the sandbox fully non-persistent. -->
+   <MappedFolder>
+     <HostFolder>..\Output\</HostFolder>
+     <ReadOnly>false</ReadOnly>
+   </MappedFolder>
+</MappedFolders>
+<LogonCommand>
+   <Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\DefaultScripts\setup.ps1</Command>
+
+   <!-- Disable sandbox-local Defender so samples aren't quarantined. Host Defender is untouched. -->
+   <!--<Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\disableDefender.ps1</Command>-->
+
+   <!-- Softer alternative - keep Defender on, but whitelist the Input/ folder only. -->
+   <!--<Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\excludeInputFromDefender.ps1</Command>-->
+
+   <!-- Lightweight analysis tooling pack (dnSpy, HxD, PE-bear, DIE, x64dbg, Process Hacker, Wireshark, Notepad++). Needs network - flip <Networking> to Default for first boot. -->
+   <!--<Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\installAnalysisTools.ps1</Command>-->
+
+   <!-- Auto-install REtoolkit on logon. Requires network. -->
+   <!--<Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\AdditionalScripts\InSandbox\installREToolkit.ps1</Command>-->
+
+</LogonCommand>
+</Configuration>

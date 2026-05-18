@@ -1,7 +1,7 @@
 # if you're wondering why this is in 'InSandbox' directory, lemme explain real quick
 # REtoolkit will add some options to Context Menu, hence I think it makes more sense to download it within the Sandbox and then install it
 # + also this is a nice example of what you can add in customScript.ps1 ))
-# (since 2026.04 the release ships as a .7z containing the setup.exe — we extract first, then run it)
+# (since 2026.04 the release ships as a .7z containing the setup.exe - we extract first, then run it)
 
 #Requires -Version 5.1
 $ErrorActionPreference = 'Stop'
@@ -19,7 +19,7 @@ $sevenZr = Join-Path $desktop '7zr.exe'
 # Start-BitsTransfer streams to disk instead of buffering in memory like Invoke-WebRequest
 Start-BitsTransfer -Source $asset.browser_download_url -Destination $archive
 
-# Standalone 7-Zip extractor — no install needed, can extract .7z
+# Standalone 7-Zip extractor - no install needed, can extract .7z
 Start-BitsTransfer -Source 'https://www.7-zip.org/a/7zr.exe' -Destination $sevenZr
 
 try {

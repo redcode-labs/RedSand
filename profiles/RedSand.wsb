@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>
-<!-- Default profile — general-purpose, balanced. See ../README.md#profiles for alternatives. -->
+<!-- Default profile - general-purpose, balanced. See ../README.md#profiles for alternatives. -->
 <VGpu>Default</VGpu>
 <Networking>Default</Networking>
 <ProtectedClient>Enable</ProtectedClient>
