@@ -101,6 +101,8 @@ RedSand/
 | `enableSandboxFeature.ps1` | Enables the Windows Sandbox optional feature. Requires admin; may need a reboot. |
 | `downloadSysinternalsSuite.ps1` | Downloads SysinternalsSuite into `Utils/Toolkits/SysinternalsSuite/`. |
 | `downloadZimmermanTools.ps1` | Fetches Eric Zimmerman's forensics tools into `Utils/Toolkits/Zimmerman/`. |
+| `build-wsb.ps1` | Interactive `.wsb` builder. Walks through every Windows Sandbox setting and writes a configuration file. Output path is freeform (relative or absolute). |
+| `build-toolkit-installer.ps1` | Interactive generator for scoop-based tool-pack installers (same shape as `installAnalysisTools.ps1`). Pick buckets, list tools, choose global (sandbox / admin) or per-user scope; writes a runnable `.ps1`. |
 
 To run any OnHost script, open PowerShell in the repo root:
 
@@ -145,6 +147,20 @@ Common tweaks:
 For one-off in-sandbox setup, edit `customScript.ps1` and uncomment its `<Command>` line in your profile's wsb — keeps your customizations out of the always-run `setup.ps1`.
 
 If you don't want a profile's writable `Output/` mapping persisting state on the host, comment out the `Output/` `MappedFolder` block in that wsb (it's marked with an inline comment).
+
+### Custom profiles and tool packs
+
+Two interactive builders generate new `.wsb` profiles and scoop tool-pack installers without hand-editing XML or PowerShell:
+
+```powershell
+# Build a custom .wsb (prompts for each isolation knob + mapped folders)
+powershell.exe -ExecutionPolicy Bypass -File .\Utils\Scripts\AdditionalScripts\OnHost\build-wsb.ps1
+
+# Generate a scoop-based tool-pack installer
+powershell.exe -ExecutionPolicy Bypass -File .\Utils\Scripts\AdditionalScripts\OnHost\build-toolkit-installer.ps1
+```
+
+The tool-pack builder asks for install scope — pick **Global** for the sandbox (admin install via scoop's `--global`) or **Per-user** if you're generating something for your everyday machine. The generated script adapts: per-user output drops the `#Requires -RunAsAdministrator` line and the `--global` flag, so the same builder works for both RedSand and standalone use.
 
 ## Security notes
 
