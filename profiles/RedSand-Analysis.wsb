@@ -32,6 +32,11 @@
      <HostFolder>..\Output\</HostFolder>
      <ReadOnly>false</ReadOnly>
    </MappedFolder>
+   <!-- Bring-your-own tools: drop binaries in ..\Tools\ or junction to existing host installs. See README. -->
+   <MappedFolder>
+     <HostFolder>..\Tools\</HostFolder>
+     <ReadOnly>true</ReadOnly>
+   </MappedFolder>
 </MappedFolders>
 <LogonCommand>
    <Command>powershell.exe -ExecutionPolicy Bypass -File C:\users\WDAGUtilityAccount\Desktop\Utils\Scripts\DefaultScripts\setup.ps1</Command>

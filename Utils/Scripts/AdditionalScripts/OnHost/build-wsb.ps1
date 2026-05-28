@@ -92,15 +92,20 @@ Write-Host ""
 Write-Host "--- Mapped folders (paths are relative to the .wsb's location) ---" -ForegroundColor Cyan
 
 if (Read-YesNo -Prompt 'Add standard RedSand mappings (..\Utils\ read-only, ..\Files\ read-write)?' -Default $true) {
-    $mappedFolders += @{ Host = '..\Utils\'; ReadOnly = $true }
-    $mappedFolders += @{ Host = '..\Files\'; ReadOnly = $false }
+    $mappedFolders += @{ Host = '..\Utils\'; ReadOnly = $true;  Sandbox = $null }
+    $mappedFolders += @{ Host = '..\Files\'; ReadOnly = $false; Sandbox = $null }
 }
 
 while (Read-YesNo -Prompt 'Add another mapped folder?' -Default $false) {
-    $hostPath = Read-Host '  Host path (e.g. ..\Input\)'
+    $hostPath = Read-Host '  Host path (any: ..\Input\, or absolute like D:\Tools\Binja)'
     if ([string]::IsNullOrWhiteSpace($hostPath)) { continue }
     $ro = Read-YesNo -Prompt '  Read-only?' -Default $true
-    $mappedFolders += @{ Host = $hostPath; ReadOnly = $ro }
+    $sandboxPath = $null
+    if (Read-YesNo -Prompt '  Map to a specific path inside the sandbox (defaults to Desktop\<folder name>)?' -Default $false) {
+        $sandboxPath = Read-Host '    Sandbox path (e.g. C:\BinaryNinja)'
+        if ([string]::IsNullOrWhiteSpace($sandboxPath)) { $sandboxPath = $null }
+    }
+    $mappedFolders += @{ Host = $hostPath; ReadOnly = $ro; Sandbox = $sandboxPath }
 }
 
 # Logon command - three-way
@@ -134,7 +139,8 @@ if ($mappedFolders.Count -gt 0) {
     Write-Host "Mapped folders:"
     foreach ($mf in $mappedFolders) {
         $mode = if ($mf.ReadOnly) { 'read-only' } else { 'read-write' }
-        Write-Host ("  - {0} ({1})" -f $mf.Host, $mode)
+        $dest = if ($mf.Sandbox) { " -> $($mf.Sandbox)" } else { '' }
+        Write-Host ("  - {0}{1} ({2})" -f $mf.Host, $dest, $mode)
     }
 }
 Write-Host "LogonCommand:         $logonChoice"
@@ -164,6 +170,9 @@ if ($mappedFolders.Count -gt 0) {
     foreach ($mf in $mappedFolders) {
         $lines += '   <MappedFolder>'
         $lines += "     <HostFolder>$(Escape-Xml $mf.Host)</HostFolder>"
+        if ($mf.Sandbox) {
+            $lines += "     <SandboxFolder>$(Escape-Xml $mf.Sandbox)</SandboxFolder>"
+        }
         $lines += "     <ReadOnly>$($mf.ReadOnly.ToString().ToLower())</ReadOnly>"
         $lines += '   </MappedFolder>'
     }

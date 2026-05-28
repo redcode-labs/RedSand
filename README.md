@@ -79,6 +79,7 @@ RedSand/
 ├── Files/                      # Read-write scratch (default profile only)
 ├── Input/                      # Read-only sample / evidence drop (Analysis + Forensics)
 ├── Output/                     # Read-write results dir (Analysis + Forensics)
+├── Tools/                      # Read-only BYO tools (mapped by every profile, see Customization)
 └── Utils/
     ├── Toolkits/               # Tools downloaded by OnHost scripts land here
     └── Scripts/
@@ -161,6 +162,37 @@ powershell.exe -ExecutionPolicy Bypass -File .\Utils\Scripts\AdditionalScripts\O
 ```
 
 The tool-pack builder asks for install scope — pick **Global** for the sandbox (admin install via scoop's `--global`) or **Per-user** if you're generating something for your everyday machine. The generated script adapts: per-user output drops the `#Requires -RunAsAdministrator` line and the `--global` flag, so the same builder works for both RedSand and standalone use.
+
+### Using your own tools (`Tools/`)
+
+Every profile maps `Tools/` read-only into the sandbox at `C:\users\WDAGUtilityAccount\Desktop\Tools\`. Three ways to put things there:
+
+1. **Drop files directly.** Copy a portable tool's folder (e.g. an extracted `dnSpy/`) into `Tools/`. It shows up inside the sandbox immediately on next launch.
+2. **Junction to an existing host install.** If a tool already lives somewhere on your host (e.g. `C:\Program Files\IDA Free 9.0`), create a directory junction without copying anything:
+   ```cmd
+   mklink /J Tools\IDA "C:\Program Files\IDA Free 9.0"
+   ```
+   `/J` doesn't require admin (unlike `/D` symlinks). The sandbox sees `Desktop\Tools\IDA\` mapped to that host directory — read-only, so the sandbox can't mutate your install.
+3. **Map an arbitrary host path directly in a wsb.** When a tool lives somewhere awkward (different drive, path with spaces, etc.) and you don't want a junction, add a `MappedFolder` to your profile's `.wsb` with an explicit `<SandboxFolder>` destination:
+   ```xml
+   <MappedFolder>
+     <HostFolder>D:\Reverse Engineering\Binary Ninja</HostFolder>  <!-- where it lives on YOUR machine -->
+     <SandboxFolder>C:\BinaryNinja</SandboxFolder>                 <!-- where it appears INSIDE the sandbox -->
+     <ReadOnly>true</ReadOnly>
+   </MappedFolder>
+   ```
+   `<HostFolder>` is the source on the host; `<SandboxFolder>` is the *destination* inside the VM. Omit `<SandboxFolder>` and the mapping defaults to `C:\users\WDAGUtilityAccount\Desktop\<basename>\` — fine for most folders, but `<SandboxFolder>` is useful when (a) you want a clean path like `C:\BinaryNinja\` that scripts inside the sandbox can reference, (b) two host folders share a basename and would collide on the default Desktop scheme, or (c) the host folder name contains spaces and you'd rather not navigate `Desktop\Binary Ninja\` in PowerShell.
+
+   **Don't want to hand-edit XML?** `build-wsb.ps1` handles this interactively. When you say yes to "Add another mapped folder?" it prompts for:
+   ```
+     Host path (any: ..\Input\, or absolute like D:\Tools\Binja): D:\Reverse Engineering\Binary Ninja
+     Read-only? [Y/n]: y
+     Map to a specific path inside the sandbox (defaults to Desktop\<folder name>)? [y/N]: y
+       Sandbox path (e.g. C:\BinaryNinja): C:\BinaryNinja
+   ```
+   The generated wsb gets a `MappedFolder` block with both `<HostFolder>` and `<SandboxFolder>` set. The summary screen shows custom destinations as `host -> sandbox` so you can verify before writing.
+
+`Tools/` itself is gitignored, so anything you put there stays local to your machine.
 
 ## Security notes
 

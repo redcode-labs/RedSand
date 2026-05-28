@@ -2,6 +2,14 @@
 
 All notable changes to RedSand are documented here. Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Note: the artifacts here are Windows Sandbox configs and PowerShell scripts rather than a versioned API, so semver is followed loosely — minor version bumps reflect meaningful additions to the user-facing surface.
 
+## [2.2] - 2026-05-28
+
+### Added
+- **`build-wsb.ps1`** - added an option to provide local directory that will be mapped into the Sandbox
+
+### Changed
+- **Profiles** - by default, mapping gitignored `Tools` directory, to drop-in portable tooling, can be further tweaked - check out README's `Using your own tools` section
+
 ## [2.1] — 2026-05-19
 
 ### Added
